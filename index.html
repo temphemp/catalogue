@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Media Catalogue</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d0d0d;
+      --surface:  #161616;
+      --border:   #2a2a2a;
+      --muted:    #555;
+      --text:     #d4d0c8;
+      --accent:   #e8d5a3;
+      --hover-bg: #1e1e1e;
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-mono:    'DM Mono', monospace;
+      --page-pad: clamp(1rem, 4vw, 3rem);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.5;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: clamp(1.25rem, 4vw, 2.5rem) var(--page-pad) clamp(1rem, 3vw, 2rem);
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2.6rem, 10vw, 5rem);
+      letter-spacing: 0.04em;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    header span {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    /* ── Nav tabs ── */
+    nav {
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--bg);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      display: flex;
+    }
+    nav::-webkit-scrollbar { display: none; }
+
+    nav button {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 0.9rem clamp(0.9rem, 3vw, 1.4rem) 0.8rem;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      margin-bottom: -1px;
+      white-space: nowrap;
+      flex: 1;
+      min-width: max-content;
+      min-height: 44px;
+    }
+
+    nav button:hover { color: var(--text); }
+
+    nav button.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── Main layout ── */
+    main {
+      padding: clamp(1.25rem, 4vw, 2.5rem) var(--page-pad);
+      max-width: 1600px;
+      margin: auto;
+    }
+
+    /* ── Section heading ── */
+    .section-label {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(clamp(100px, 28vw, 180px), 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      margin-bottom: 2.5rem;
+    }
+
+    /* Docs: prevent lone card stretching full width */
+    .grid-constrained {
+      grid-template-columns: repeat(auto-fill, minmax(clamp(100px, 28vw, 180px), 180px));
+    }
+
+    /* ── Movie card ── */
+    .card {
+      background: var(--surface);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      transition: background 0.12s;
+      text-decoration: none;
+      color: inherit;
+      outline-offset: -2px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .card:hover,
+    .card:active { background: var(--hover-bg); }
+
+    .card:hover .poster-wrap::after,
+    .card:active .poster-wrap::after {
+      opacity: 1;
+    }
+
+    .card:focus-visible {
+      outline: 2px solid var(--accent);
+    }
+
+    .poster-wrap {
+      position: relative;
+      aspect-ratio: 2/3;
+      overflow: hidden;
+      background: #111;
+    }
+
+    .poster-wrap::after {
+      content: '▶';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      color: var(--accent);
+      background: rgba(0,0,0,0.45);
+      opacity: 0;
+      transition: opacity 0.15s;
+      /* sit above badges but behind nothing */
+      z-index: 1;
+    }
+
+    .poster-wrap img.poster {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover .poster-wrap img.poster {
+      transform: scale(1.03);
+    }
+
+    /* ── Host badge ── */
+    .host-badge {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      width: 32px;
+      height: 32px;
+      background: rgba(0, 0, 0, 0.72);
+      border-radius: 5px;
+      padding: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .host-badge img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* ── Season badge ── */
+    .season-badge {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      background: rgba(0, 0, 0, 0.75);
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      font-weight: 400;
+      padding: 2px 5px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .card-info {
+      padding: clamp(0.5rem, 1.5vw, 0.75rem) clamp(0.5rem, 1.5vw, 0.8rem) clamp(0.6rem, 2vw, 0.85rem);
+      border-top: 1px solid var(--border);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .card-title {
+      font-family: var(--font-mono);
+      font-size: clamp(10px, 2.5vw, 12px);
+      font-weight: 400;
+      color: var(--text);
+      line-height: 1.35;
+    }
+
+    .card-year {
+      font-size: clamp(9px, 2vw, 10px);
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ── Section visibility ── */
+    .section { display: none; }
+    .section.visible { display: block; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Catalogue</h1>
+  <span>personal film library</span>
+</header>
+
+<nav>
+  <button class="active" data-section="animated">Animated</button>
+  <button data-section="live-action">Live Action</button>
+  <button data-section="cartoons">Cartoons</button>
+  <button data-section="docs">Documentaries</button>
+  <button data-section="all">All</button>
+</nav>
+
+<main>
+
+  <!-- ANIMATED -->
+  <section class="section visible" id="animated">
+    <p class="section-label">Animated &mdash; 12 titles</p>
+    <div class="grid">
+      <a class="card" href="https://drive.google.com/file/d/176wEF_QPlVfWsNJckxR5aaawttE0Z5kM/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/animated movies/avatar aang.webp" alt="Avatar Aang" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Avatar: Aang, The Last Airbender</div><div class="card-year">2026</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/18MMEI66IXaI7TsQXRoiFvZgis073LZXh/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/animated movies/zootopia 2.webp" alt="Zootopia 2" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Zootopia 2</div><div class="card-year">2025</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/1_vOqGENkvXQlXfve-nL4s5vtnpPAt-VD/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/animated movies/ne zha 2.webp" alt="Ne Zha 2" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Ne Zha 2</div><div class="card-year">2025</div></div>
+      </a>
+      <a class="card" href="https://mega.nz/file/uW5HkDAR#uqLQFHsgDqM7aFMnXw1j0LTfEvxjUz4dOS2AckwEOcQ" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/animated movies/dragon ball super super hero.webp" alt="Dragon Ball Super: Super Hero" loading="lazy" />
+          <div class="host-badge"><img src="icons/mega.svg" alt="Mega" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Dragon Ball Super: Super Hero</div><div class="card-year">2022</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/1vR-PjqSode1esPA6BseUNVgzJSLtRNfW/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/animated movies/ne zha.webp" alt="Ne Zha" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Ne Zha</div><div class="card-year">2019</div></div>
+      </a>
+      <a class="card" href="https://mega.nz/file/aCAThSwB#xLyy6Jgct6MFBAn40SJ1JpBgsqdy_XG98gcqCHV_qUU" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/animated movies/dragon ball super broly.webp" alt="Dragon Ball Super Broly" loading="lazy" />
+          <div class="host-badge"><img src="icons/mega.svg" alt="Mega" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Dragon Ball Super Broly</div><div class="card-year">2018</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/11nm7QPESKwJ5I-yxocJ4s4BR27N_YNFa/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/animated movies/the lego batman movie.webp" alt="The LEGO Batman Movie" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">The LEGO Batman Movie</div><div class="card-year">2017</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/1BMT3Zyfcg5LVYrRyp2CRUzzzN5daYrCA/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/animated movies/rango.webp" alt="Rango" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Rango</div><div class="card-year">2011</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/1JFCta4ANB39oxy78kSfZv8rsPnSGL3vY/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/animated movies/over the hedge.webp" alt="Over the Hedge" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Over the Hedge</div><div class="card-year">2006</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/1E2Gr9doo_VNpCLviyUm8QzEFE-hgPP5t/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/animated movies/monster house.webp" alt="Monster House" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Monster House</div><div class="card-year">2006</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/1KX0y78SlT1sKMc6w26dAO9xVO4Zh3z-k/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/animated movies/the polar express.webp" alt="The Polar Express" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">The Polar Express</div><div class="card-year">2004</div></div>
+      </a>
+      <a class="card" href="https://mega.nz/file/rfBEBKTL#79D-ionDDAAnV8y2JedfL0OeadMLRZyFQlWBsN3BR7M" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/animated movies/brother bear.webp" alt="Brother Bear" loading="lazy" />
+          <div class="host-badge"><img src="icons/mega.svg" alt="Mega" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Brother Bear</div><div class="card-year">2003</div></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- LIVE ACTION -->
+  <section class="section" id="live-action">
+    <p class="section-label">Live Action &mdash; 16 titles</p>
+    <div class="grid">
+      <a class="card" href="https://drive.google.com/file/d/1dHNCqCdxvw0PcP0OCQMqnNm5t5vM-zGG/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/live action movies/life of pi.webp" alt="Life of Pi" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Life of Pi</div><div class="card-year">2012</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/10gPCbHZORsyGOe4p6RuBBAJwIsGM1GAU/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/live action movies/enchanted.webp" alt="Enchanted" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Enchanted</div><div class="card-year">2007</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/1FoYuHXGaW8wg0faRLYHIQAA0YKTg2NRs/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/live action movies/potc 2.webp" alt="Pirates of the Caribbean: Dead Man's Chest" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">PotC: Dead Man's Chest</div><div class="card-year">2006</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/1fcN1v8UIMuxGFz2qKT7Ay0rCbrUOzMml/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/live action movies/potc 1.webp" alt="Pirates of the Caribbean: Curse of the Black Pearl" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">PotC: Black Pearl</div><div class="card-year">2003</div></div>
+      </a>
+      <a class="card" href="https://mega.nz/file/neo2zZqR#2thWlH5z7KRRMP86--MVdwGE0ptp4e2C4NIB7SJeJzE" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/live action movies/king kong.webp" alt="King Kong" loading="lazy" />
+          <div class="host-badge"><img src="icons/mega.svg" alt="Mega" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">King Kong</div><div class="card-year">2005</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/1GbPQYUonCT6hcg-7KidJhmvKUVKFET1a/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/live action movies/school of rock.webp" alt="School of Rock" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">School of Rock</div><div class="card-year">2003</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/1liw_kkOPfOX_WPklVSmtq0Fqd4sGRadc/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/live action movies/bend it like beckham.webp" alt="Bend It Like Beckham" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Bend It Like Beckham</div><div class="card-year">2002</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/1rhKK08l2eyZyEd3k0VHJUagaot-e0GgA/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/live action movies/cast away.webp" alt="Cast Away" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Cast Away</div><div class="card-year">2000</div></div>
+      </a>
+      <a class="card" href="https://mega.nz/file/zWQDSQIB#EtiJ-ISrRerA9fGGLJEK1rmfIWoQWiUzvoPW6LBxix0" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/live action movies/the fifth element.webp" alt="The Fifth Element" loading="lazy" />
+          <div class="host-badge"><img src="icons/mega.svg" alt="Mega" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">The Fifth Element</div><div class="card-year">1997</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/130E6Vrdr_0sR5I3FmS1zE81T_1yu4-9m/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/live action movies/contact.webp" alt="Contact" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Contact</div><div class="card-year">1997</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/1GiUrLXsixjKWEky1nTxiIfZyRZ-1tnsO/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/live action movies/clueless.webp" alt="Clueless" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Clueless</div><div class="card-year">1995</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/1r_My3NO-3OXqd1iXSy1Pbywo4WPP1O-C/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/live action movies/the secret garden.webp" alt="The Secret Garden" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">The Secret Garden</div><div class="card-year">1993</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/131PJiqk8zJhb09Mv_-YgkiHUbDFHrXFQ/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/live action movies/the princess bride.webp" alt="The Princess Bride" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">The Princess Bride</div><div class="card-year">1987</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/1p1iszpbXbtotObwyxffrtzJy-Ns30Kmw/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/live action movies/the goonies.webp" alt="The Goonies" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">The Goonies</div><div class="card-year">1985</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/12lAZ1ClXQqPeNmPVULToN6CZHXNj2VjU/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/live action movies/alien.webp" alt="Alien" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Alien</div><div class="card-year">1979</div></div>
+      </a>
+      <a class="card" href="https://drive.google.com/file/d/1eHisWOXy9su3MvCI89HAN1oErxWsUHSV/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/live action movies/the wizard of oz.webp" alt="The Wizard of Oz" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">The Wizard of Oz</div><div class="card-year">1939</div></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- CARTOONS -->
+  <section class="section" id="cartoons">
+    <p class="section-label">Cartoons &mdash; 11 titles</p>
+    <div class="grid">
+      <a class="card" href="https://youtube.com/playlist?list=PLiv1IUQDVSNL7X_UVCmMH5L0O5G9kvRjv" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/cartoons/gravity falls.webp" alt="Gravity Falls" loading="lazy" />
+          <div class="season-badge">S01</div>
+          <div class="host-badge"><img src="icons/youtube.svg" alt="Youtube" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Gravity Falls</div><div class="card-year">2012</div></div>
+      </a>
+      <a class="card" href="https://mega.nz/folder/hNs3BDqS#K5BW4DYG_3MYiqLUCdV4mQ" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/cartoons/superman the animated series.webp" alt="Superman: The Animated Series" loading="lazy" />
+          <div class="season-badge">S01</div>
+          <div class="host-badge"><img src="icons/mega.svg" alt="Mega" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Superman: The Animated Series</div><div class="card-year">1996</div></div>
+      </a>
+      <a class="card" href="https://mega.nz/folder/pE0zQabR#iQfuMI-ogisXBCdF8l9QfQ" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/cartoons/superman the animated series.webp" alt="Superman: The Animated Series" loading="lazy" />
+          <div class="season-badge">S02</div>
+          <div class="host-badge"><img src="icons/mega.svg" alt="Mega" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Superman: The Animated Series</div><div class="card-year">1997</div></div>
+      </a>
+      <a class="card" href="https://mega.nz/folder/1B1BjYBZ#0uI_jJ96Mo7yWNgtPwpHGg" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/cartoons/superman the animated series.webp" alt="Superman: The Animated Series" loading="lazy" />
+          <div class="season-badge">S03</div>
+          <div class="host-badge"><img src="icons/mega.svg" alt="Mega" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Superman: The Animated Series</div><div class="card-year">1998</div></div>
+      </a>
+      <a class="card" href="https://mega.nz/folder/kRdUWBoQ#pcTTS02psN3mf6ULKgCiEw" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/cartoons/superman the animated series.webp" alt="Superman: The Animated Series" loading="lazy" />
+          <div class="season-badge">S04</div>
+          <div class="host-badge"><img src="icons/mega.svg" alt="Mega" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Superman: The Animated Series</div><div class="card-year">1999</div></div>
+      </a>
+      <a class="card" href="https://www.youtube.com/playlist?list=PL7VEq3tXc6hsvHKfzdknf8GViPEr5JW5W" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/cartoons/transformers prime.webp" alt="Transformers: Prime" loading="lazy" />
+          <div class="host-badge"><img src="icons/youtube.svg" alt="Youtube" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Transformers: Prime</div><div class="card-year">2010-2013</div></div>
+      </a>
+      <a class="card" href="https://mega.nz/folder/CSBUhAyJ#Px02F6mN3q-1PXFWqzc9nw" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/cartoons/the transformers.webp" alt="The Transformers" loading="lazy" />
+          <div class="season-badge">S01</div>
+          <div class="host-badge"><img src="icons/mega.svg" alt="Mega" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">The Transformers</div><div class="card-year">1984</div></div>
+      </a>
+      <a class="card" href="https://www.youtube.com/playlist?list=PLX_skiiR5h4v1h4q7lcayjwj53Xfdv0kn" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/cartoons/miraculous.webp" alt="Miraculous" loading="lazy" />
+          <div class="season-badge">S01-S04</div>
+          <div class="host-badge"><img src="icons/youtube.svg" alt="Youtube" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Miraculous</div><div class="card-year">2015-2021</div></div>
+      </a>
+      <a class="card" href="https://www.youtube.com/playlist?list=PLNmbST1519bJZDVvHOTdZ-dnjgpLMFCFv" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/cartoons/my little pony.webp" alt="My Little Pony" loading="lazy" />
+          <div class="host-badge"><img src="icons/youtube.svg" alt="Youtube" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">My Little Pony</div><div class="card-year">2010-2019</div></div>
+      </a>
+      <a class="card" href="https://www.youtube.com/playlist?list=PLX_skiiR5h4u2fFEcSSgxfGwTme2yIa9v" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/cartoons/totally spies.webp" alt="Totally Spies" loading="lazy" />
+          <div class="host-badge"><img src="icons/youtube.svg" alt="Youtube" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Totally Spies</div><div class="card-year">2002-2024</div></div>
+      </a>
+      <a class="card" href="https://www.youtube.com/playlist?list=PLX_skiiR5h4squKJCm7oLwKLd3jmDFM0z" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/cartoons/the powerpuff girls.webp" alt="The Powerpuff Girls" loading="lazy" />
+          <div class="host-badge"><img src="icons/youtube.svg" alt="Youtube" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">The Powerpuff Girls</div><div class="card-year">1998-2004</div></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- DOCUMENTARIES -->
+  <section class="section" id="docs">
+    <p class="section-label">Documentaries &mdash; 2 titles</p>
+    <div class="grid grid-constrained">
+      <a class="card" href="https://drive.google.com/file/d/1cmMLkg3rZNBf8f9FnJ5yIZGzOOM2cJK2/view" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/documentaries/ocean with david attenborough.webp" alt="Ocean with David Attenborough" loading="lazy" />
+          <div class="host-badge"><img src="icons/gdrive.svg" alt="Google Drive" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Ocean with David Attenborough</div><div class="card-year">2025</div></div>
+      </a>
+      <a class="card" href="https://mega.nz/folder/eGAgTKiA#lB1IQBRtoNZNvhY7XxtJqA" target="_blank" rel="noopener">
+        <div class="poster-wrap">
+          <img class="poster" src="posters/documentaries/prehistoric planet.webp" alt="Prehistoric Planet" loading="lazy" />
+          <div class="season-badge">S01</div>
+          <div class="host-badge"><img src="icons/mega.svg" alt="Mega" /></div>
+        </div>
+        <div class="card-info"><div class="card-title">Prehistoric Planet</div><div class="card-year">2022</div></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ALL -->
+  <section class="section" id="all">
+    <p class="section-label">All titles &mdash; 41 titles</p>
+    <div class="grid" id="all-grid"></div>
+  </section>
+
+</main>
+
+<script>
+  // Tab switching
+  const buttons = document.querySelectorAll('nav button');
+  const sections = document.querySelectorAll('.section');
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      buttons.forEach(b => b.classList.remove('active'));
+      sections.forEach(s => s.classList.remove('visible'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.section).classList.add('visible');
+      // scroll active tab into view on narrow screens
+      btn.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+    });
+  });
+
+  // Populate "All" tab by cloning cards from the other sections
+  const allGrid = document.getElementById('all-grid');
+  document.querySelectorAll('#animated .card, #live-action .card, #cartoons .card, #docs .card').forEach(card => {
+    allGrid.appendChild(card.cloneNode(true));
+  });
+</script>
+</body>
+</html>
